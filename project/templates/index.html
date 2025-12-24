@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="search-container">
+    <div class="hero-section">
+        <h1>Discover Your Next Destination</h1>
+        <p class="hero-subtitle">Find weather, attractions, and more for any city in the world.</p>
+
+        <form method="POST" class="search-form">
+            <div class="search-input-wrapper">
+                <input type="text" name="city_name" placeholder="Enter city name..." class="search-input"
+                    value="{{ city_name if city_name else '' }}" required>
+                <button type="submit" class="btn-search">Search</button>
+            </div>
+        </form>
+
+        {% if error_message %}
+        <div class="error-box">
+            <p class="error">{{ error_message }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if weather and city_name %}
+    <div class="results-container">
+
+        <!-- City Header & Weather -->
+        <div class="city-header-card">
+            <div class="city-title-row">
+                <div class="city-name-wrapper">
+                    <h2>{{ city_name }}</h2>
+                    {% if flag_url %}
+                    <img src="{{ flag_url }}" alt="{{ city_name }} Flag" class="city-flag">
+                    {% endif %}
+                </div>
+
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="{{ url_for('auth.add_favorite') }}" class="favorite-form">
+                    <input type="hidden" name="city_name" value="{{ city_name }}">
+                    <input type="hidden" name="country_code" value="{{ weather.country_code }}">
+                    <button type="submit" class="btn-favorite {{ 'active' if is_favorite else '' }}">
+                        {% if is_favorite %}
+                        <span class="star-icon">★</span> Favorited
+                        {% else %}
+                        <span class="star-icon">☆</span> Add to Favorites
+                        {% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="weather-grid">
+                <div class="weather-main">
+                    <img src="{{ weather.icon }}" alt="{{ weather.conditions }}" class="weather-icon">
+                    <div class="temp-wrapper">
+                        <span class="temp">{{ weather.temperature }}°C</span>
+                        <span class="condition">{{ weather.conditions }}</span>
+                    </div>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-card">
+                        <span class="label">Feels Like</span>
+                        <span class="value">{{ weather.feels_like }}°C</span>
+                    </div>
+                    <div class="detail-card">
+                        <span class="label">Humidity</span>
+                        <span class="value">{{ weather.humidity }}%</span>
+                    </div>
+                    <div class="detail-card">
+                        <span class="label">Wind</span>
+                        <span class="value">{{ weather.wind_speed }} m/s</span>
+                    </div>
+                    <div class="detail-card">
+                        <span class="label">Pressure</span>
+                        <span class="value">{{ weather.pressure }} hPa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-container-wrapper">
+            <h3>Explore {{ city_name }}</h3>
+            <div id="map"></div>
+        </div>
+
+        <!-- Info & Attractions Grid -->
+        <div class="info-grid">
+            {% if city_info %}
+            <div class="info-card city-description">
+                <h3>About {{ city_name }}</h3>
+                <div class="description-content">
+                    <p>{{ city_info }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if attractions %}
+            <div class="info-card attractions-list">
+                <h3>Top Attractions</h3>
+                <div class="attraction-cards">
+                    {% for attraction in attractions %}
+                    <div class="attraction-item">
+                        <div class="attraction-header">
+                            <h4>{{ attraction.name }}</h4>
+                            {% if attraction.rating != 'N/A' %}
+                            <span class="rating-badge">★ {{ attraction.rating }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="attraction-desc">{{ attraction.description }}</p>
+                        <p class="attraction-address">{{ attraction.address }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if weather and city_name %}
+
+<!-- Data for JavaScript -->
+<script id="city-data" type="application/json">
+    {
+        "name": {{ city_name | tojson }},
+        "lat": {{ weather.lat | tojson }},
+        "lon": {{ weather.lon | tojson }},
+        "weatherConditions": {{ weather.conditions | tojson }},
+        "attractions": {{ attractions | tojson if attractions else '[]' }}
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Parse data from the JSON script block explicitly to avoid linter errors in JS
+        const cityData = JSON.parse(document.getElementById('city-data').textContent);
+
+        var map = L.map('map').setView([cityData.lat, cityData.lon], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // City Marker
+        L.marker([cityData.lat, cityData.lon]).addTo(map)
+            .bindPopup("<b>" + cityData.name + "</b><br>" + cityData.weatherConditions)
+            .openPopup();
+
+        // Attractions Markers
+        if (cityData.attractions && cityData.attractions.length > 0) {
+            cityData.attractions.forEach(function (attraction) {
+                L.marker([attraction.lat, attraction.lng]).addTo(map)
+                    .bindPopup("<b>" + attraction.name + "</b><br>" + (attraction.address || ""));
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,39 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask
+instance/
+legacy_backup/
+.webassets-cache
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# --- AGGIUNTE IMPORTANTI ---
+
+# Database (Ignora i file di database SQLite ovunque siano)
+*.sqlite3
+*.sqlite
+*.db
+
+# Logs
+*.log
+
+# Windows thumbnail cache (File spazzatura comuni)
+Thumbs.db

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Search History - City Advisor{% endblock %}
+
+{% block content %}
+<div class="container page-container">
+    <div class="page-header">
+        <h1>Search History</h1>
+        <a href="{{ url_for('main.index') }}" class="btn-secondary">Back to Search</a>
+    </div>
+
+    {% if history %}
+    <div class="history-list-wrapper">
+        {% for entry in history %}
+        <div class="history-item">
+            <div class="history-info">
+                <h2>{{ entry.city_name }}</h2>
+                <span class="history-date">{{ entry.searched_at.strftime('%b %d, %Y at %H:%M') }}</span>
+            </div>
+            <form method="POST" action="{{ url_for('main.index') }}">
+                <input type="hidden" name="city_name" value="{{ entry.city_name }}">
+                <button type="submit" class="btn-outline btn-sm">Search Again</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>You have no search history yet.</p>
+        <a href="{{ url_for('main.index') }}" class="btn-primary">Start Exploring</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
