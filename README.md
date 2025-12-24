@@ -60,7 +60,7 @@ Follow these steps to run the project locally:
     SECRET_KEY=your_random_secret_key
     OPENWEATHER_API_KEY=your_openweather_key
     GOOGLE_PLACES_API_KEY=your_google_key  # (Optional/Legacy)
-    OPENTRIPMAP_API_KEY=your_opentripmap_key
+    Geoapify_API_KEY=your_geoapify_key
     DATABASE_URL=sqlite:///city_advisor.db
     ```
 
