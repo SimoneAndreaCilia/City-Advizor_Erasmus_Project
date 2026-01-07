@@ -26,7 +26,7 @@ def check_geo(city):
         for i, item in enumerate(data):
             print(f"  {i+1}. {item.get('name')}, {item.get('country')} (Lat: {item.get('lat')}, Lon: {item.get('lon')})")
     else:
-        print(f"Geo API failed: {res_geo.status_code}")
+        print(f"Geo API failed!!: {res_geo.status_code}")
 
 if __name__ == "__main__":
     check_geo("Rome")
