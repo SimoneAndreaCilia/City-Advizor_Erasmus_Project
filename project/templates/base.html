@@ -22,6 +22,7 @@
                 <a href="{{ url_for('main.index') }}">City Advizor</a>
             </div>
             <div class="nav-menu">
+                <button id="theme-toggle" class="btn-outline">🌙 Dark Mode</button>
                 {% if current_user.is_authenticated %}
                 <span class="nav-text">Welcome, {{ current_user.username }}!</span>
                 <a href="{{ url_for('auth.view_favorites') }}" class="nav-link">Favorites</a>
@@ -55,6 +56,7 @@
             <p>&copy; 2024 City Advizor. All rights reserved.</p>
         </footer>
     </div>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
 
 </html>

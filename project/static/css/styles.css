@@ -16,6 +16,20 @@
     --radius-lg: 16px;
 }
 
+body.dark-mode {
+    --primary-color: #5da3f0;
+    /* Slightly lighter for better contrast on dark */
+    --primary-hover: #4a90e2;
+    --secondary-color: #adb5bd;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --border-color: #333333;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -90,6 +104,18 @@ body {
 .btn-logout:hover {
     background-color: var(--primary-hover);
     color: white;
+}
+
+body.dark-mode .btn-register,
+body.dark-mode .btn-logout {
+    background-color: #3b4c90;
+    /* Matching darker hero theme */
+    color: #e0e0e0;
+}
+
+body.dark-mode .btn-register:hover,
+body.dark-mode .btn-logout:hover {
+    background-color: #4a2b65;
 }
 
 /* Main Content */
@@ -186,6 +212,15 @@ input:focus {
     background-color: var(--primary-hover);
 }
 
+body.dark-mode .btn-primary {
+    background-color: #3b4c90;
+    color: #e0e0e0;
+}
+
+body.dark-mode .btn-primary:hover {
+    background-color: #4a2b65;
+}
+
 .btn-secondary {
     background-color: var(--secondary-color);
     color: white;
@@ -274,6 +309,10 @@ input:focus {
     border-radius: var(--radius-lg);
     color: white;
     margin-bottom: 3rem;
+}
+
+body.dark-mode .hero-section {
+    background: linear-gradient(135deg, #3b4c90 0%, #4a2b65 100%);
 }
 
 .hero-subtitle {
