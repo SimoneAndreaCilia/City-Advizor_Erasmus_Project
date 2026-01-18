@@ -304,7 +304,7 @@ body.dark-mode .btn-primary:hover {
 }
 
 .hero-section {
-    padding: 4rem 1rem;
+    padding: 6rem 1rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: var(--radius-lg);
     color: white;
@@ -322,28 +322,73 @@ body.dark-mode .hero-section {
 
 .search-input-wrapper {
     display: flex;
-    max-width: 600px;
+    max-width: 700px;
     margin: 0 auto;
-    gap: 0.5rem;
+    position: relative;
+    /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    padding: 0.4rem;
+    /* Reduced padding slightly to keep pill tight */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    align-items: center;
 }
 
-.search-input {
+
+input.search-input {
     flex: 1;
     padding: 1rem;
     border: none;
-    border-radius: var(--radius-sm);
+    outline: none;
+    /* Ensure no focus ring */
+    border-radius: 50px;
     font-size: 1.1rem;
+    background: transparent;
+    color: white;
+    font-weight: 500;
+    box-shadow: none;
+    /* Remove any potential shadow */
+}
+
+input.search-input:focus {
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
+}
+
+.search-input:focus {
+    box-shadow: none;
+    outline: none;
 }
 
 .btn-search {
-    background-color: #333;
+    background-color: var(--primary-color);
+    /* Use primary color for pop */
     color: white;
     border: none;
-    padding: 0 2rem;
-    border-radius: var(--radius-sm);
+    padding: 0.8rem 2.5rem;
+    border-radius: 50px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-left: 0.5rem;
+    /* Slight separation */
+}
+
+.btn-search:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Results */
