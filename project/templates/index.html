@@ -225,28 +225,34 @@
             <button class="btn-close-custom" onclick="toggleCurrencyModal()">&times;</button>
         </div>
 
-        <div class="converter-box">
+        <div class="converter-box position-relative">
+            <!-- Amount From -->
             <div class="input-group-custom mb-3">
-                <span class="input-label">EUR</span>
+                <div class="currency-identity">
+                    <span class="currency-flag-icon">🇪🇺</span>
+                    <span class="input-label">EUR</span>
+                </div>
                 <input type="number" id="amount-from" class="form-control-custom" value="1"
                     oninput="calculateCurrency()">
-                <span class="currency-symbol">€</span>
             </div>
 
-            <div class="text-center my-2 swap-arrow">
-                <span>⬇️</span>
+            <div class="text-center my-2 swap-arrow-wrapper">
+                <div class="swap-arrow">
+                    <span>⬇️</span>
+                </div>
             </div>
 
+            <!-- Amount To -->
             <div class="input-group-custom">
-                <span class="input-label">{{ currency_code }}</span>
-                <input type="text" id="amount-to" class="form-control-custom" readonly>
-                <span class="currency-symbol">
+                <div class="currency-identity">
                     {% if flag_url %}
                     <img src="{{ flag_url }}" alt="Flag" class="tiny-flag">
                     {% else %}
-                    $
+                    <span class="currency-flag-icon">💱</span>
                     {% endif %}
-                </span>
+                    <span class="input-label">{{ currency_code }}</span>
+                </div>
+                <input type="text" id="amount-to" class="form-control-custom" readonly>
             </div>
         </div>
 
