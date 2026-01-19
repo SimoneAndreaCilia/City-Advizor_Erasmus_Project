@@ -21,6 +21,54 @@
         {% endif %}
     </div>
 
+    <!-- Home Page Content Strategy: Visible only when not searching -->
+    {% if not city_name and not weather and not error_message %}
+
+    <!-- Features Section -->
+    <div class="features-section">
+        <div class="feature-item">
+            <div class="feature-icon">🌤️</div>
+            <h4>Real-time Weather</h4>
+            <p>Accurate forecasts for any city worldwide.</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🗺️</div>
+            <h4>Interactive Maps</h4>
+            <p>Explore destinations with dynamic maps.</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🏛️</div>
+            <h4>Tourist Attractions</h4>
+            <p>Discover the best places to visit.</p>
+        </div>
+    </div>
+
+    <!-- Popular Destinations Grid -->
+    {% if popular_weather %}
+    <div class="popular-section">
+        <h2 class="section-title">Popular Destinations</h2>
+        <div class="cards-grid popular-grid">
+            {% for city in popular_weather %}
+            <a href="{{ url_for('main.index', city_name=city.name) }}" class="city-card popular-card">
+                <div class="popular-card-content">
+                    <div class="popular-header">
+                        <h3>{{ city.name }}</h3>
+                        <img src="{{ city.flag_url }}" alt="Flag" class="city-flag-sm">
+                    </div>
+                    <div class="popular-weather">
+                        <img src="{{ city.icon }}" alt="Weather Icon" class="weather-icon-sm">
+                        <span class="popular-temp">{{ city.temperature }}°C</span>
+                    </div>
+                    <p class="popular-desc">Click to explore</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
     {% if weather and city_name %}
     <div class="results-container">
 
@@ -78,6 +126,42 @@
             </div>
         </div>
 
+        <!-- Quick Info Bar -->
+        <div class="info-bar">
+            <!-- Local Time -->
+            <div class="info-bar-item">
+                <span class="info-icon">🕒</span>
+                <div class="info-text">
+                    <span class="info-label">Local Time</span>
+                    <span class="info-value" id="local-time">--:--</span>
+                </div>
+            </div>
+
+            <!-- Currency (Clickable Trigger) -->
+            <div class="info-bar-item clickable-info" onclick="toggleCurrencyModal()">
+                <span class="info-icon">💴</span>
+                <div class="info-text">
+                    <span class="info-label">Exchange Rate</span>
+                    <span class="info-value">
+                        {% if exchange_rate %}
+                        1 EUR ≈ {{ exchange_rate }} {{ currency_code }}
+                        {% else %}
+                        Euro (EUR)
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Emergency -->
+            <div class="info-bar-item">
+                <span class="info-icon">🚑</span>
+                <div class="info-text">
+                    <span class="info-label">Emergency</span>
+                    <span class="info-value">{{ emergency_number|default('112') }}</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Map Section -->
         <div class="map-container-wrapper">
             <h3>Explore {{ city_name }}</h3>
@@ -128,32 +212,116 @@
         "lat": {{ weather.lat | tojson }},
         "lon": {{ weather.lon | tojson }},
         "weatherConditions": {{ weather.conditions | tojson }},
-        "attractions": {{ attractions | tojson if attractions else '[]' }}
+        "attractions": {{ attractions | tojson if attractions else '[]' }},
+        "timezoneOffset": {{ timezone_offset | default(0) }}
     }
 </script>
 
+<!-- Progressive Disclosure Currency Modal -->
+<div id="currency-modal-overlay" class="modal-overlay" onclick="toggleCurrencyModal()">
+    <div class="custom-modal" onclick="event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-4 modal-header-custom">
+            <h5 class="m-0 fw-bold"><span class="modal-icon">🪙</span> Converter</h5>
+            <button class="btn-close-custom" onclick="toggleCurrencyModal()">&times;</button>
+        </div>
+
+        <div class="converter-box position-relative">
+            <!-- Amount From -->
+            <div class="input-group-custom mb-3">
+                <div class="currency-identity">
+                    <span class="currency-flag-icon">🇪🇺</span>
+                    <span class="input-label">EUR</span>
+                </div>
+                <input type="number" id="amount-from" class="form-control-custom" value="1"
+                    oninput="calculateCurrency()">
+            </div>
+
+            <div class="text-center my-2 swap-arrow-wrapper">
+                <div class="swap-arrow">
+                    <span>⬇️</span>
+                </div>
+            </div>
+
+            <!-- Amount To -->
+            <div class="input-group-custom">
+                <div class="currency-identity">
+                    {% if flag_url %}
+                    <img src="{{ flag_url }}" alt="Flag" class="tiny-flag">
+                    {% else %}
+                    <span class="currency-flag-icon">💱</span>
+                    {% endif %}
+                    <span class="input-label">{{ currency_code }}</span>
+                </div>
+                <input type="text" id="amount-to" class="form-control-custom" readonly>
+            </div>
+        </div>
+
+        <p class="text-muted small text-center mt-3 mb-0" style="opacity: 0.7;">Live rates: 1 EUR = {{ exchange_rate }}
+            {{ currency_code }}</p>
+    </div>
+</div>
+
 <script>
+    // Rates from Flask
+    const exchangeRate = parseFloat("{{ exchange_rate | default(1) }}");
+
+    function toggleCurrencyModal() {
+        const modal = document.getElementById('currency-modal-overlay');
+        modal.classList.toggle('active');
+
+        // Initial calculation when opening
+        if (modal.classList.contains('active')) {
+            calculateCurrency();
+        }
+    }
+
+    function calculateCurrency() {
+        const amount = document.getElementById('amount-from').value;
+        const result = (amount * exchangeRate).toFixed(2);
+        document.getElementById('amount-to').value = result;
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (event) {
+        if (event.key === "Escape") {
+            document.getElementById('currency-modal-overlay').classList.remove('active');
+        }
+    });
+
+    // Existing Map/Time Logic
     document.addEventListener('DOMContentLoaded', function () {
-        // Parse data from the JSON script block explicitly to avoid linter errors in JS
-        const cityData = JSON.parse(document.getElementById('city-data').textContent);
+        const cityDataElement = document.getElementById('city-data');
+        if (cityDataElement) {
+            const cityData = JSON.parse(cityDataElement.textContent);
 
-        var map = L.map('map').setView([cityData.lat, cityData.lon], 13);
+            var map = L.map('map').setView([cityData.lat, cityData.lon], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-        // City Marker
-        L.marker([cityData.lat, cityData.lon]).addTo(map)
-            .bindPopup("<b>" + cityData.name + "</b><br>" + cityData.weatherConditions)
-            .openPopup();
+            L.marker([cityData.lat, cityData.lon]).addTo(map)
+                .bindPopup("<b>" + cityData.name + "</b><br>" + cityData.weatherConditions)
+                .openPopup();
 
-        // Attractions Markers
-        if (cityData.attractions && cityData.attractions.length > 0) {
-            cityData.attractions.forEach(function (attraction) {
-                L.marker([attraction.lat, attraction.lng]).addTo(map)
-                    .bindPopup("<b>" + attraction.name + "</b><br>" + (attraction.address || ""));
-            });
+            if (cityData.attractions && cityData.attractions.length > 0) {
+                cityData.attractions.forEach(function (attraction) {
+                    L.marker([attraction.lat, attraction.lng]).addTo(map)
+                        .bindPopup("<b>" + attraction.name + "</b><br>" + (attraction.address || ""));
+                });
+            }
+
+            // Local Time Live Clock
+            const timezoneOffset = cityData.timezoneOffset;
+            function updateLocalTime() {
+                const now = new Date();
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                const cityTime = new Date(utc + (1000 * timezoneOffset));
+                const options = { hour: '2-digit', minute: '2-digit', hour12: false };
+                document.getElementById('local-time').textContent = cityTime.toLocaleTimeString([], options);
+            }
+            updateLocalTime();
+            setInterval(updateLocalTime, 60000);
         }
     });
 </script>
