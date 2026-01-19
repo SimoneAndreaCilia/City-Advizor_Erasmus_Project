@@ -72,7 +72,8 @@ def get_weather(city):
                 "flag_url": f"https://flagcdn.com/w320/{country_code.lower()}.png",
                 "name": name,
                 "lat": lat,
-                "lon": lon
+                "lon": lon,
+                "timezone": data.get("timezone", 0)
             }
     except Exception as e:
         print(f"Error in get_weather: {e}")

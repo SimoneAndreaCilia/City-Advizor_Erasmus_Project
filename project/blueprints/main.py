@@ -5,8 +5,13 @@ from ..models import FavoriteCity, SearchHistory
 from ..services.weather import get_weather, get_country_flag
 from ..services.wiki import get_city_info
 from ..services.places import get_tourist_attractions
+from ..services.currency_service import get_currency_code, get_exchange_rate
+from ..services.emergency_service import get_emergency_number
 
 main_bp = Blueprint('main', __name__)
+
+
+POPULAR_CITIES = ["London", "Paris", "New York", "Tokyo"]
 
 @main_bp.route("/", methods=["GET", "POST"])
 def index():
@@ -17,6 +22,11 @@ def index():
     flag_url = None
     city_name = None
     is_favorite = False
+    popular_weather = []
+    currency_code = None
+    exchange_rate = None
+    timezone_offset = 0
+    emergency_number = None
 
     # Handle query parameter (e.g. redirect from favorites)
     if request.method == 'GET' and request.args.get('city_name'):
@@ -58,6 +68,17 @@ def index():
         lat = weather['lat'] if weather else None
         lon = weather['lon'] if weather else None
         attractions = get_tourist_attractions(search_term, lat=lat, lon=lon)
+        
+        if weather:
+             timezone_offset = weather.get('timezone', 0)
+
+        # Currency Conversion & Emergency
+        if weather and 'country_code' in weather:
+            currency_code = get_currency_code(weather['country_code'])
+            emergency_number = get_emergency_number(weather['country_code'])
+            
+            if currency_code != "EUR":
+                exchange_rate = get_exchange_rate(currency_code)
 
         # Handle cases where data isn't found
         if not weather:
@@ -66,6 +87,13 @@ def index():
              city_info = f"No Wikipedia information available for '{city_name}' (tried searching for '{search_term}')."
     elif request.method == "POST":
          error_message = "Please enter a valid city name."
+
+    # Fetch popular cities weather if strictly on home page (no search)
+    if not city_name and not error_message:
+        for city in POPULAR_CITIES:
+            w = get_weather(city)
+            if w:
+                popular_weather.append(w)
 
     return render_template(
         "index.html",
@@ -76,6 +104,11 @@ def index():
         flag_url=flag_url,
         city_name=city_name,
         is_favorite=is_favorite,
+        popular_weather=popular_weather,
+        currency_code=currency_code,
+        exchange_rate=exchange_rate,
+        timezone_offset=timezone_offset,
+        emergency_number=emergency_number
     )
 
 @main_bp.route("/search_history")
