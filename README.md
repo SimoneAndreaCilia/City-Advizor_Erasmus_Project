@@ -15,6 +15,12 @@
     *   Synthesized descriptions and ratings.
     *   Powered by *Geoapify*.
 *   **🗺️ Interactive Map**: Explore the city with a dynamic map based on *Leaflet* and *OpenStreetMap*.
+*   **🤖 AI Itinerary Planner**:
+    *   Generate personalized 1-day travel itineraries based on current weather.
+    *   Powered by *Qwen2.5-72B* via *Hugging Face Inference API*.
+*   **💱 Currency Converter**:
+    *   Smart currency conversion for the city's local currency.
+    *   Real-time rates via *ExchangeRate-API*.
 *   **👤 User Area**:
     *   Secure Registration and Login.
     *   **Favorites**: Save your beloved cities for quick access.
@@ -29,6 +35,8 @@
     *   OpenWeatherMap (Weather)
     *   Geoapify (Attractions)
     *   OpenStreetMap (Maps)
+    *   Hugging Face (AI Generation)
+    *   ExchangeRate-API (Currency)
 
 ## 🚀 Installation and Usage
 
@@ -62,7 +70,9 @@ Follow these steps to run the project locally:
     GOOGLE_PLACES_API_KEY=your_google_key  # (Optional/Legacy)
     Geoapify_API_KEY=your_geoapify_key
     DATABASE_URL=sqlite:///city_advisor.db
-    ```
+    EXCHANGE_RATE_API_KEY=your_exchange_rate_key
+    HF_TOKEN=your_huggingface_token
+        ```
 
 5.  **Run the application**:
     ```bash
