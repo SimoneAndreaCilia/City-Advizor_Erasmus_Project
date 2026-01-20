@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from ..extensions import db
-from ..models import User, FavoriteCity
+from ..models import User, FavoriteCity, SavedItinerary
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -98,4 +98,5 @@ def add_favorite():
 @login_required
 def view_favorites():
     favorites = FavoriteCity.query.filter_by(user_id=current_user.id).all()
-    return render_template('favorites.html', favorites=favorites)
+    saved_itineraries = SavedItinerary.query.filter_by(user_id=current_user.id).order_by(SavedItinerary.timestamp.desc()).all()
+    return render_template('favorites.html', favorites=favorites, saved_itineraries=saved_itineraries)

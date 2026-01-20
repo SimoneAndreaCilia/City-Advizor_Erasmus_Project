@@ -126,6 +126,60 @@
             </div>
         </div>
 
+        <!-- AI Itinerary Generator -->
+        <div class="city-header-card" style="margin-top: -1rem; display: flex; flex-direction: column;">
+            <div class="d-flex justify-content-between align-items-center mb-3"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.5rem;">✨</span>
+                    <h3 style="margin: 0; color: var(--primary-color);">AI Travel Guide</h3>
+                </div>
+                <button id="btn-generate-itinerary" class="btn-primary" onclick="generateItinerary()"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);">
+                    Generate 1-Day Itinerary
+                </button>
+            </div>
+
+            <!-- Result Container -->
+            <div id="ai-result-container" style="display: none; margin-top: 1rem;">
+                <div class="info-card city-description"
+                    style="border: 1px solid rgba(118, 75, 162, 0.3); background: rgba(118, 75, 162, 0.05);">
+                    <div id="ai-spinner" style="text-align: center; padding: 2rem;">
+                        <div class="spinner-custom"></div>
+                        <p style="margin-top: 1rem; color: var(--text-secondary); font-weight: 500;">Creating the best
+                            plan based on the weather...</p>
+                    </div>
+                    <div id="ai-content" style="display: none; line-height: 1.6; color: var(--text-primary);">
+                        <!-- Content injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .spinner-custom {
+                    width: 3rem;
+                    height: 3rem;
+                    border: 4px solid rgba(0, 0, 0, 0.1);
+                    border-left-color: var(--primary-color);
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto;
+                }
+
+                @keyframes spin {
+                    100% {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                /* Dark mode adjustment for spinner track */
+                body.dark-mode .spinner-custom {
+                    border-color: rgba(255, 255, 255, 0.1);
+                    border-left-color: var(--primary-color);
+                }
+            </style>
+        </div>
+
         <!-- Quick Info Bar -->
         <div class="info-bar">
             <!-- Local Time -->
@@ -287,6 +341,158 @@
             document.getElementById('currency-modal-overlay').classList.remove('active');
         }
     });
+
+    // Auth status from Flask
+    const isUserAuthenticated = "{{ 'true' if current_user.is_authenticated else 'false' }}" === "true";
+
+    // AI Itinerary Logic
+    function generateItinerary() {
+        const btn = document.getElementById('btn-generate-itinerary');
+        const container = document.getElementById('ai-result-container');
+        const spinner = document.getElementById('ai-spinner');
+        const content = document.getElementById('ai-content');
+
+        // UI Updates
+        btn.disabled = true;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Generating...";
+        container.style.display = 'block';
+        spinner.style.display = 'block';
+        content.style.display = 'none';
+
+        // Prepare Data
+        const cityData = JSON.parse(document.getElementById('city-data').textContent);
+        // Extract temp securely
+        let temp = "20";
+        const tempEl = document.querySelector('.temp');
+        if (tempEl) {
+            temp = tempEl.textContent.replace('°C', '').trim();
+        }
+
+        const requestData = {
+            city: cityData.name,
+            weather: cityData.weatherConditions,
+            temp: temp
+        };
+
+        // Call API
+        fetch('/api/generate-itinerary', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.itinerary) {
+                    // UI Magic: Split by ### and show cards
+                    const rawText = data.itinerary;
+                    const sections = rawText.split('###');
+                    let htmlContent = '';
+
+                    if (sections.length === 3) {
+                        const times = ['🌅 Morning', '☀️ Afternoon', '🌙 Evening'];
+
+                        htmlContent = '<div class="itinerary-grid">'; // Start Grid
+
+                        sections.forEach((text, index) => {
+                            htmlContent += `
+                                <div class="itinerary-card">
+                                    <h5 style="color: var(--primary-color); font-weight: 700; margin-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">${times[index]}</h5>
+                                    <p style="margin: 0; color: var(--text-primary); font-size: 0.95rem; line-height: 1.5;">${text.trim()}</p>
+                                </div>
+                            `;
+                        });
+
+                        htmlContent += '</div>'; // End Grid
+                    } else {
+                        // Fallback
+                        htmlContent = `<div style="padding: 1rem; color: var(--text-primary);">${rawText}</div>`;
+                    }
+
+                    // ADD SAVE BUTTON HERE
+                    if (isUserAuthenticated) {
+                        htmlContent += `
+                            <div style="margin-top: 1.5rem; text-align: right;">
+                                <button onclick="saveItineraryToDB()" class="btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);">
+                                    💾 Save to Favorites
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        htmlContent += `
+                            <div style="margin-top: 1.5rem; text-align: center;">
+                                <small><a href="{{ url_for('auth.login') }}">Login</a> to save this itinerary.</small>
+                            </div>
+                        `;
+                    }
+
+                    content.innerHTML = htmlContent;
+                    content.style.display = 'block';
+                    spinner.style.display = 'none';
+                    btn.innerHTML = "Regenerate Itinerary";
+                    btn.disabled = false;
+                } else {
+                    alert("Error generating itinerary. Please try again.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    container.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                container.style.display = 'none';
+            });
+    }
+
+    function saveItineraryToDB() {
+        // Get the content. We want to save the raw HTML of the grids? Or just the text?
+        // Proposal says "Salviamo l'intero contenuto HTML generato".
+        // Use the innerHTML of the content div, but remove the save button from it to avoid recursion if we re-display it?
+        // Actually, let's just grab the current innerHTML. When displaying back, we might want to strip the button or just not show it.
+        // A better approach is to reconstruct it or grab the itinerary-grid part.
+
+        const contentDiv = document.getElementById('ai-content');
+        // Clone to modify
+        const clone = contentDiv.cloneNode(true);
+        // Remove the save button wrapper if it exists (it's the last div usually)
+        const lastDiv = clone.lastElementChild;
+        if (lastDiv && lastDiv.textContent.includes('Save to Favorites')) {
+            lastDiv.remove();
+        }
+
+        const htmlContent = clone.innerHTML;
+        const cityData = JSON.parse(document.getElementById('city-data').textContent);
+
+        fetch('/api/save-itinerary', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                city: cityData.name,
+                content: htmlContent
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    // Disable button to prevent double save
+                    // document.querySelector('button[onclick="saveItineraryToDB()"]').disabled = true;
+                } else {
+                    alert("Error saving: " + (data.error || "Unknown error"));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error saving itinerary.");
+            });
+    }
 
     // Existing Map/Time Logic
     document.addEventListener('DOMContentLoaded', function () {

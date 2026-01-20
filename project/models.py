@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     # Relationship for favorites and search history
     favorites = db.relationship('FavoriteCity', backref='user', lazy=True)
     search_history = db.relationship('SearchHistory', backref='user', lazy=True)
+    saved_itineraries = db.relationship('SavedItinerary', backref='user', lazy=True)
 
     def set_password(self, password):
         """Create hashed password."""
@@ -39,3 +40,14 @@ class SearchHistory(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     city_name = db.Column(db.String(100), nullable=False)
     searched_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SavedItinerary(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    # Using Text for potentially large HTML content
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<SavedItinerary {self.city}>'

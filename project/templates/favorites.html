@@ -30,5 +30,51 @@
         <a href="{{ url_for('main.index') }}" class="btn-primary">Start Exploring</a>
     </div>
     {% endif %}
+
+    <!-- Saved Itineraries Section -->
+    <div class="page-header" style="margin-top: 3rem;">
+        <h1>Saved Itineraries</h1>
+    </div>
+
+    {% if saved_itineraries %}
+    <div class="cards-grid">
+        {% for itinerary in saved_itineraries %}
+        <div class="city-card itinerary-card-preview">
+            <div class="card-content">
+                <h2>{{ itinerary.city }}</h2>
+                <span class="date-added">Created: {{ itinerary.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                <div style="margin-top: 1rem;">
+                    <button class="btn-primary btn-sm" onclick="toggleItinerary('itinerary-{{ itinerary.id }}')">
+                        View Itinerary
+                    </button>
+                    <!-- Hidden Content -->
+                    <div id="itinerary-{{ itinerary.id }}" class="saved-itinerary-content"
+                        style="display: none; margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                        {{ itinerary.content | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function toggleItinerary(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+    </script>
+
+    {% else %}
+    <div class="empty-state">
+        <p>You have no saved itineraries yet.</p>
+        <p class="text-muted">Generate one with the AI Guide!</p>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
