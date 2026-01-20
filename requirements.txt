@@ -1,8 +1,8 @@
-Flask==3.0.0
-requests==2.31.0
-pycountry==23.12.11
-country-converter==1.0.0
-flask-sqlalchemy==2.5.1
-flask-login==0.5.0
-werkzeug==2.1.1
-python-dotenv==1.0.0
+Flask
+requests
+pycountry
+country-converter
+flask-sqlalchemy
+flask-login
+python-dotenv
+huggingface_hub
