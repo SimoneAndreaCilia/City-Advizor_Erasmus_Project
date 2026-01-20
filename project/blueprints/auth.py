@@ -100,3 +100,45 @@ def view_favorites():
     favorites = FavoriteCity.query.filter_by(user_id=current_user.id).all()
     saved_itineraries = SavedItinerary.query.filter_by(user_id=current_user.id).order_by(SavedItinerary.timestamp.desc()).all()
     return render_template('favorites.html', favorites=favorites, saved_itineraries=saved_itineraries)
+
+@auth_bp.route('/favorites/delete/<int:itinerary_id>', methods=['POST'])
+@login_required
+def delete_itinerary(itinerary_id):
+    itinerary = SavedItinerary.query.get_or_404(itinerary_id)
+    
+    # Ensure ownership
+    if itinerary.user_id != current_user.id:
+        flash('Permission denied.', 'error')
+        return redirect(url_for('auth.view_favorites'))
+    
+    try:
+        db.session.delete(itinerary)
+        db.session.commit()
+        flash('Itinerary deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error deleting itinerary.', 'error')
+        
+    return redirect(url_for('auth.view_favorites'))
+
+
+@auth_bp.route('/favorites/delete_city/<int:city_id>', methods=['POST'])
+@login_required
+def delete_favorite_city(city_id):
+    favorite = FavoriteCity.query.get_or_404(city_id)
+    
+    # Ensure ownership
+    if favorite.user_id != current_user.id:
+        flash('Permission denied.', 'error')
+        return redirect(url_for('auth.view_favorites'))
+    
+    try:
+        db.session.delete(favorite)
+        db.session.commit()
+        flash(f'{favorite.city_name} removed from favorites.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error removing city from favorites.', 'error')
+        
+    return redirect(url_for('auth.view_favorites'))
+

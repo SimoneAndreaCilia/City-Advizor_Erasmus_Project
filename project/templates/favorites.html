@@ -3,78 +3,154 @@
 {% block title %}My Favorites - City Advisor{% endblock %}
 
 {% block content %}
-<div class="container page-container">
-    <div class="page-header">
-        <h1>My Favorite Cities</h1>
-        <a href="{{ url_for('main.index') }}" class="btn-secondary">Back to Search</a>
-    </div>
-
-    {% if favorites %}
-    <div class="cards-grid">
-        {% for favorite in favorites %}
-        <div class="city-card">
-            <div class="card-content">
-                <h2>{{ favorite.city_name }}</h2>
-                <span class="date-added">Added on: {{ favorite.added_at.strftime('%Y-%m-%d') }}</span>
-            </div>
-            <form method="POST" action="{{ url_for('main.index') }}">
-                <input type="hidden" name="city_name" value="{{ favorite.city_name }}">
-                <button type="submit" class="btn-primary btn-sm">View Details</button>
-            </form>
+<div class="profile-hero">
+    <div class="hero-content">
+        <div class="avatar-circle">{{ current_user.username[0].upper() }}</div>
+        <div>
+            <h1>Hello, {{ current_user.username }}!</h1>
+            <p>You have <strong>{{ favorites|length }}</strong> favorite cities and <strong>{{ saved_itineraries|length
+                    }}</strong> saved itineraries.</p>
         </div>
-        {% endfor %}
     </div>
-    {% else %}
-    <div class="empty-state">
-        <p>You have no favorite cities yet.</p>
-        <a href="{{ url_for('main.index') }}" class="btn-primary">Start Exploring</a>
-    </div>
-    {% endif %}
+</div>
 
-    <!-- Saved Itineraries Section -->
-    <div class="page-header" style="margin-top: 3rem;">
-        <h1>Saved Itineraries</h1>
+<div class="container page-container" style="margin-top: -3rem; position: relative; z-index: 2;">
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-nav">
+        <button id="btn-tab-cities" class="tab-btn active" onclick="switchTab('cities')">Favorite Cities</button>
+        <button id="btn-tab-itineraries" class="tab-btn" onclick="switchTab('itineraries')">Saved Itineraries</button>
     </div>
 
-    {% if saved_itineraries %}
-    <div class="cards-grid">
-        {% for itinerary in saved_itineraries %}
-        <div class="city-card itinerary-card-preview">
-            <div class="card-content">
-                <h2>{{ itinerary.city }}</h2>
-                <span class="date-added">Created: {{ itinerary.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
-                <div style="margin-top: 1rem;">
-                    <button class="btn-primary btn-sm" onclick="toggleItinerary('itinerary-{{ itinerary.id }}')">
-                        View Itinerary
-                    </button>
-                    <!-- Hidden Content -->
-                    <div id="itinerary-{{ itinerary.id }}" class="saved-itinerary-content"
-                        style="display: none; margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                        {{ itinerary.content | safe }}
+    <!-- Favorite Cities Tab -->
+    <div id="tab-cities" class="tab-content active">
+        {% if favorites %}
+        <div class="cards-grid">
+            {% for favorite in favorites %}
+            <div class="city-card">
+                <div class="card-content">
+                    <div class="card-header-visual gradient-1">
+                        <span class="card-icon">🏙️</span>
                     </div>
+                    <div class="card-body">
+                        <h2>{{ favorite.city_name }}</h2>
+                        <span class="date-added">Added: {{ favorite.added_at.strftime('%d %b %Y') }}</span>
+
+                        <div class="card-actions">
+                            <form method="POST" action="{{ url_for('main.index') }}">
+                                <input type="hidden" name="city_name" value="{{ favorite.city_name }}">
+                                <button type="submit" class="btn-primary btn-sm action-btn">Explore Again</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('auth.delete_favorite_city', city_id=favorite.id) }}"
+                                onsubmit="return confirm('Remove {{ favorite.city_name }} from favorites?');">
+                                <button type="submit" class="btn-outline btn-sm action-btn btn-danger-outline">
+                                    🗑️ Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">🌍</span>
+            <h3>No Favorite Cities Yet</h3>
+            <p>Start searching for destinations and add them to your list!</p>
+            <a href="{{ url_for('main.index') }}" class="btn-primary"
+                style="margin-top: 2rem; text-decoration: none; display: inline-block;">Start Exploring Now</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Saved Itineraries Tab -->
+    <div id="tab-itineraries" class="tab-content">
+        {% if saved_itineraries %}
+        <div class="cards-grid">
+            {% for itinerary in saved_itineraries %}
+            <div class="city-card itinerary-card-preview">
+                <div class="card-header-visual gradient-2">
+                    <span class="card-icon">🗺️</span>
+                </div>
+                <div class="card-content card-body">
+                    <h2>{{ itinerary.city }}</h2>
+                    <span class="date-added">Created: {{ itinerary.timestamp.strftime('%d %b %Y') }}</span>
+
+                    <div class="card-actions">
+                        <button class="btn-outline btn-sm action-btn"
+                            onclick="openModal('modal-itinerary-{{ itinerary.id }}')">
+                            👁️ View
+                        </button>
+                        <form method="POST" action="{{ url_for('auth.delete_itinerary', itinerary_id=itinerary.id) }}"
+                            onsubmit="return confirm('Are you sure you want to delete this itinerary?');">
+                            <button type="submit" class="btn-outline btn-sm action-btn btn-danger-outline">
+                                🗑️ Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% for itinerary in saved_itineraries %}
+        <div id="modal-itinerary-{{ itinerary.id }}" class="modal-overlay">
+            <div class="custom-modal modal-wide">
+                <div class="modal-header-custom">
+                    <h5><span class="modal-icon">🗺️</span> {{ itinerary.city }} Itinerary</h5>
+                    <button class="btn-close-custom"
+                        onclick="closeModal('modal-itinerary-{{ itinerary.id }}')">&times;</button>
+                </div>
+                <div class="modal-body modal-content-scrollable">
+                    {{ itinerary.content | safe }}
                 </div>
             </div>
         </div>
         {% endfor %}
-    </div>
 
-    <script>
-        function toggleItinerary(id) {
-            const el = document.getElementById(id);
-            if (el.style.display === 'none') {
-                el.style.display = 'block';
-            } else {
-                el.style.display = 'none';
-            }
-        }
-    </script>
-
-    {% else %}
-    <div class="empty-state">
-        <p>You have no saved itineraries yet.</p>
-        <p class="text-muted">Generate one with the AI Guide!</p>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">📝</span>
+            <h3>No Saved Itineraries</h3>
+            <p>Generate your first AI travel plan and save it here.</p>
+            <a href="{{ url_for('main.index') }}" class="btn-primary"
+                style="margin-top: 2rem; text-decoration: none; display: inline-block;">Create Itinerary</a>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 
 </div>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        // Show selected content
+        document.getElementById('tab-' + tabName).classList.add('active');
+
+        // Active button
+        document.getElementById('btn-tab-' + tabName).classList.add('active');
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = ''; // Restore scroll
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+</script>
 {% endblock %}
