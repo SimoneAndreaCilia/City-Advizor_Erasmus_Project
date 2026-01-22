@@ -222,8 +222,12 @@
             <div id="map"></div>
         </div>
 
+        <!-- Language Survival Guide -->
+        <div id="language-guide-container" style="margin-bottom: 1.5rem;"></div>
+
         <!-- Info & Attractions Grid -->
         <div class="info-grid">
+
             {% if city_info %}
             <div class="info-card city-description">
                 <h3>About {{ city_name }}</h3>
@@ -267,7 +271,8 @@
         "lon": {{ weather.lon | tojson }},
         "weatherConditions": {{ weather.conditions | tojson }},
         "attractions": {{ attractions | tojson if attractions else '[]' }},
-        "timezoneOffset": {{ timezone_offset | default(0) }}
+        "timezoneOffset": {{ timezone_offset | default(0) }},
+        "countryCode": {{ weather.country_code | tojson }}
     }
 </script>
 
@@ -315,6 +320,7 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/languages.js') }}"></script>
 <script>
     // Rates from Flask
     const exchangeRate = parseFloat("{{ exchange_rate | default(1) }}");
@@ -499,6 +505,11 @@
         const cityDataElement = document.getElementById('city-data');
         if (cityDataElement) {
             const cityData = JSON.parse(cityDataElement.textContent);
+
+            // Initialize Language Guide
+            if (typeof renderLanguageGuide === 'function' && cityData.countryCode) {
+                renderLanguageGuide(cityData.countryCode);
+            }
 
             var map = L.map('map').setView([cityData.lat, cityData.lon], 13);
 
